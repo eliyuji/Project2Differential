@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -37,16 +37,26 @@ md"""
 
 # ╔═╡ 340eeb85-da4e-4d6c-aca6-9befc224fb7f
 md"""
-Population: $(@bind Population Slider( 0:500, 100, true))
+y0: $(@bind y0 Slider( 0:1.0:500.0, 100.0, true))
 """
 
 # ╔═╡ c587834f-9769-463f-9a81-c5583d12cbc0
 md"""
-Growth: $(@bind Growth Slider( 0:0.01:3, 1.08, true))
+k: $(@bind k Slider( 0:0.01:3, 1.08, true))
+"""
+
+# ╔═╡ 89c6d76e-084c-4104-b929-f1a6827b8614
+md"""
+m : $(@bind m Slider(  0:1.0:100.0, 12.0, true))
+"""
+
+# ╔═╡ 4642aa34-0146-44a4-acf0-77fab080e70a
+md"""
+n : $(@bind n Slider(0:1.0:100.0, 0.0, true))
 """
 
 # ╔═╡ 0f13cf4c-14a6-4a5f-90d4-cd90cc488e67
-tspan0 = (0,20) #time is measured in years
+tspan0 = (0.0,20.0) #time is measured in years
 
 # ╔═╡ 83a9cff8-303f-49f9-a646-7b60bd17d656
 md"""
@@ -65,55 +75,90 @@ $$\frac{dp}{dt} = kP$$
 """
 
 # ╔═╡ 9cb1593a-7908-4462-adc0-92c2c86f1144
-function c1(u,k,t)
+function c1(u,v,t)
 		x = u
-		dx = k*u
+		dx = v*u
 	end
+
+# ╔═╡ 19499aa6-2bd8-4b9e-9780-c136b9da57be
+f1(t) = 100*exp(1.08*t)
 
 # ╔═╡ 7ae4ea05-801d-4da5-be92-77c25ced075e
 begin
-	k = Growth
-prob = ODEProblem(c1,Population,tspan0,k)
+	v = k
+prob = ODEProblem(c1,y0,tspan0,v)
 end
 
 # ╔═╡ 7d153a2f-0860-44ec-b17f-3996bd657fed
-sol = solve(prob)
+sol1 = solve(prob)
 
 # ╔═╡ 56e6b437-4fc7-4d57-97eb-6096dd82fb7c
 begin
-plot(sol,
+plot(sol1,
 	linewidth =2, 
-	title = "SAMPLE", 
+	title = "No population Control", 
 	label = "Differential Model Solution",
-	xaxis= "Time",
-	yaxis = "Population",
+	xaxis= "Time (years)",
+	yaxis = "Population (Cats)",
 	xrange = (0,5),
 	yrange = (0,1000)
 )
 	plot!(
-		[sol2(t) for t in 0:20],
-		linewidth =2,  
-	label = "Analytical Solution",
-	
-		
-		
+		f1, label = "Analytical Solution",
+		linewidth = 2.1
 	)
 end
-
-# ╔═╡ 3555fb1d-3a1b-4757-8faf-55e7e570f3c2
-###Please enter Population*e^(growth*t)
-
-# ╔═╡ c42f7c53-dd2b-45ca-8518-9ff105f2a413
-sol2(t) = 
-
-# ╔═╡ d01235da-4492-4804-9831-5d1042711ca1
-e = 2.71828
 
 # ╔═╡ 299c45df-30eb-4828-8894-f30f175628c0
 md"""
 ### Case 2: Trap-Kill
 In this case, a trap-kill method would be implemented where x amount of traps will be set out throughout town and every cat captured will be euthanized. This method is highly unethical and we do not reccommand it, although it will be an option. We will show the feral colony's population if this method is implemented
 """
+
+# ╔═╡ 6cd4bb20-618f-4679-bf83-0ea34dba4a25
+md"""
+### Differential equation:
+$$\frac{dp}{dt} = kP-mh$$
+(k is the growth rate,p is the current population of feral cats, m is the number of cats caught by each trap, and n is the number of traps)
+### Analytical solution:
+ $$P(t) = 100e^{1.08t}-12n$$
+"""
+
+# ╔═╡ 41917578-f74b-4b29-a192-3091e7bbd099
+function c2(y0,p,t)
+		m,n = p
+		x = y0
+		dx = (k*y0)-(m*n)
+	end
+
+# ╔═╡ 97f84a62-f03c-4585-a8b4-35463e6561e2
+begin
+	v2 = m,n
+prob2 = ODEProblem(c2,y0,tspan0,v2)
+end
+
+# ╔═╡ a1dfaad2-a971-491c-ac6f-d90c6581eccb
+f2(t) = (1/k)*((((k*y0)-(m*n))exp(k*t))+m*n)
+
+# ╔═╡ 904422cc-8544-4032-b350-1895c99ec20d
+sol2 = solve(prob2)
+
+# ╔═╡ a4880454-5406-482f-8b28-a0201bcc3b5d
+begin
+plot(sol2,
+	linewidth =2, 
+	title = "Trap Kill", 
+	label = "Differential Model Solution",
+	xaxis= "Time (years)",
+	yaxis = "Population (Cats)",
+	xrange = (0,5),
+	yrange = (0,600)
+)
+	plot!(
+		f2, label = "Analytical Solution",
+		linewidth = 2.1
+	)
+end
 
 # ╔═╡ 03594498-0760-4078-8139-1813218229dc
 md"""
@@ -1792,21 +1837,27 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╠═2d976d64-981e-11ed-2645-6fe2a85d9df9
-# ╠═094873a1-3fa7-40b3-8143-57a5cbd8318f
+# ╟─094873a1-3fa7-40b3-8143-57a5cbd8318f
 # ╟─cd2d6f44-4323-44c1-9575-7988779164e9
 # ╟─340eeb85-da4e-4d6c-aca6-9befc224fb7f
-# ╠═c587834f-9769-463f-9a81-c5583d12cbc0
+# ╟─c587834f-9769-463f-9a81-c5583d12cbc0
+# ╟─89c6d76e-084c-4104-b929-f1a6827b8614
+# ╟─4642aa34-0146-44a4-acf0-77fab080e70a
 # ╠═0f13cf4c-14a6-4a5f-90d4-cd90cc488e67
 # ╟─83a9cff8-303f-49f9-a646-7b60bd17d656
 # ╟─f2e419e0-dbb9-4494-9e6e-07454918ff7c
 # ╠═9cb1593a-7908-4462-adc0-92c2c86f1144
+# ╟─19499aa6-2bd8-4b9e-9780-c136b9da57be
 # ╠═7ae4ea05-801d-4da5-be92-77c25ced075e
-# ╠═7d153a2f-0860-44ec-b17f-3996bd657fed
+# ╟─7d153a2f-0860-44ec-b17f-3996bd657fed
 # ╠═56e6b437-4fc7-4d57-97eb-6096dd82fb7c
-# ╠═3555fb1d-3a1b-4757-8faf-55e7e570f3c2
-# ╠═c42f7c53-dd2b-45ca-8518-9ff105f2a413
-# ╠═d01235da-4492-4804-9831-5d1042711ca1
 # ╠═299c45df-30eb-4828-8894-f30f175628c0
+# ╟─6cd4bb20-618f-4679-bf83-0ea34dba4a25
+# ╟─41917578-f74b-4b29-a192-3091e7bbd099
+# ╟─97f84a62-f03c-4585-a8b4-35463e6561e2
+# ╠═a1dfaad2-a971-491c-ac6f-d90c6581eccb
+# ╟─904422cc-8544-4032-b350-1895c99ec20d
+# ╟─a4880454-5406-482f-8b28-a0201bcc3b5d
 # ╠═03594498-0760-4078-8139-1813218229dc
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
